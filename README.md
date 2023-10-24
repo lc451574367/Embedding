@@ -27,3 +27,6 @@ $ git clone https://github.com/lc451574367/Embedding
 ## How to run the codes
 
 The python script `scripts_allstep.py` contains all functions.
+
+## Note
+The bert service is often cause misuse of BertClient in multi-thread/process environment. You can’t reuse one BertClient among multiple threads/processes. If you want to use two different bert models in a row, you must close the current model after using it and then use the next one. 
