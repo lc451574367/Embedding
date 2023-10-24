@@ -6,4 +6,4 @@ Common Crawl (42B tokens, 1.9M vocab, uncased, 300d vectors, 1.75 GB download): 
 Common Crawl (840B tokens, 2.2M vocab, cased, 300d vectors, 2.03 GB download): glove.840B.300d.zip
 Twitter (2B tweets, 27B tokens, 1.2M vocab, uncased, 25d, 50d, 100d, & 200d vectors, 1.42 GB download): glove.twitter.27B.zip
 -------------------------------------------------------------------------------------------------------------------------------
-2. Unzip the vector files.
+2. Unzip the vector files to this folder.
