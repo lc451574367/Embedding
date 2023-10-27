@@ -2,8 +2,29 @@
 """
 Created on Fri Oct 20 10:28:02 2023
 Dependency:
+	tensorflow 1.14.0
+	bert-serving-server
+	bert-serving-client
+	gensim
+	scipy
+	protobuf 3.20.1
+	nltk
+	numpy
+	pandas
 Module Help:
-
+1. load model : 
+	get_word2vec_model
+	get_glove_model
+	get_bert_model
+2. Get different pre-trained model according different parameters :
+	get_word2vec_model_by_diff_para
+	get_glove_model_by_diff_para
+	get_bert_model_by_diff_para
+3. Get vector 
+	get vector of each word
+	Word_vector
+	Sentence_vector
+	Clean_sentence
 
 @author: Cheng Liu
 """
@@ -41,13 +62,15 @@ def get_bert_model(model_name):
 
 def close_bert():
     # kill current bert-service
-    outinfo = subprocess.Popen('netstat -ano|findstr 5555', stdout=subprocess.PIPE, shell=True).communicate()
-    port = outinfo[0].decode().split()[-1]
-    p = subprocess.Popen('taskkill -pid {port}', shell=True)
+    # outinfo = subprocess.Popen('netstat -ano|findstr 5555', stdout=subprocess.PIPE, shell=True).communicate()
+    # port = outinfo[0].decode().split()[-1]
+    # p = subprocess.Popen('taskkill -pid {port}', shell=True)
+    pid = os.getpid()
+    os.kill(pid, signal.SIGTERM)
 
 
 """
-load different pre-trained model according different parameters
+Get different pre-trained model according different parameters
 """    
 def get_word2vec_model_by_diff_para(corpus = 'GoogleNews'):
     size = 'none'
@@ -268,8 +291,26 @@ def get_bert_model_by_diff_para(layer = 12, dimension = 768, case = 'uncase', co
     print('------------------------------------\n')
     return model,layer,dimension,case,corpustype
 
+"""
+get vector of each word, if the word is not in this model, output nan 
+"""
 def get_word_vector_from_model(wordlist,model,dimension=300):
-    # get vector of each word, if the word is not in this model, will output nan  
+    """ 
+        
+    Parameters
+    ----------
+    wordlist : list
+        list of words
+    model : 
+        glove, word2vec, bert model
+    dimension : int
+        
+    Returns
+    ----------
+    wordvectorlist : list
+        list of vecors of words
+        
+    """
     wordvectorlist = []
     for w in wordlist: 
         try :        
@@ -287,7 +328,7 @@ def get_word_vector_from_model(wordlist,model,dimension=300):
 """
 get word vector by different pre-trained model
 """         
-def Word_vector(file, modeltype = 'glove', corpus = 'common', dimension = 300, size = 'L', filetype = 'csv'):
+def Word_vector(file, modeltype = 'glove', corpus = 'common', dimension = 300, size = 'L', filetype = 'csv', outword = 'n'):
     """
     
     Parameters
@@ -295,7 +336,7 @@ def Word_vector(file, modeltype = 'glove', corpus = 'common', dimension = 300, s
     file : file
         wordlist filepath
     modeltype : str, optional
-        you can select different algorithm {'word2vec','glove'}, default option is 'glove' 
+        you can select different model {'word2vec','glove'}, default option is 'glove' 
     corpus : str, optional
         you can select different corpus that used to train model {'common','wiki','twitter'}, default option is 'common'
     dimension : int, optional
@@ -305,28 +346,30 @@ def Word_vector(file, modeltype = 'glove', corpus = 'common', dimension = 300, s
         ** only glove model **
     filetype : str, optional
         you can select outfile format {'txt','csv','xlsx'}, defult format is txt
-    
+    outword : str, optional
+        you can select if output words and vectors into one file {'n','y'}
+        
     Returns
     ----------
-    outpath
-        output a file include word and vector
+        output a file include words(optional) and vectors
         
     Entire model selection
     ----------
     <glove model>
-    1. modeltype:'glove'+ corpus:'common'+ dimenstion:300 + size:'L' ---> [glove_840B_300d_g2w] [default]
-    2. modeltype:'glove'+ corpus:'common'+ dimenstion:300 + size:'M' ---> [glove_42B_300d_g2w]
-    3. modeltype:'glove'+ corpus:'wiki'+ dimenstion:300 + size:'none' ---> [glove_6B_300d_g2w]
-    4. modeltype:'glove'+ corpus:'wiki'+ dimenstion:200 + size:'none' ---> [glove_6B_200d_g2w]
-    5. modeltype:'glove'+ corpus:'wiki'+ dimenstion:100 + size:'none' ---> [glove_6B_100d_g2w]
-    6. modeltype:'glove'+ corpus:'wiki'+ dimenstion:50 + size:'none' ---> [glove_6B_50d_g2w]
-    7. modeltype:'glove'+ corpus:'twitter'+ dimenstion:200 + size:'none' ---> [glove_twitter_27B_200d_g2w]
-    8. modeltype:'glove'+ corpus:'twitter'+ dimenstion:100 + size:'none' ---> [glove_twitter_27B_100d_g2w]
-    9. modeltype:'glove'+ corpus:'twitter'+ dimenstion:50 + size:'none' ---> [glove_twitter_27B_50d_g2w]
-    10. modeltype:'glove'+ corpus:'twitter'+ dimenstion:25 + size:'none' ---> [glove_twitter_27B_25d_g2w]
+    1. modeltype:'glove' + corpus:'common' + dimenstion:300 + size:'L' ---> [glove_840B_300d_g2w] [default]
+    2. modeltype:'glove' + corpus:'common' + dimenstion:300 + size:'M' ---> [glove_42B_300d_g2w]
+    3. modeltype:'glove' + corpus:'wiki' + dimenstion:300 + size:'none' ---> [glove_6B_300d_g2w]
+    4. modeltype:'glove' + corpus:'wiki' + dimenstion:200 + size:'none' ---> [glove_6B_200d_g2w]
+    5. modeltype:'glove' + corpus:'wiki' + dimenstion:100 + size:'none' ---> [glove_6B_100d_g2w]
+    6. modeltype:'glove' + corpus:'wiki' + dimenstion:50 + size:'none' ---> [glove_6B_50d_g2w]
+    7. modeltype:'glove' + corpus:'twitter' + dimenstion:200 + size:'none' ---> [glove_twitter_27B_200d_g2w]
+    8. modeltype:'glove' + corpus:'twitter' + dimenstion:100 + size:'none' ---> [glove_twitter_27B_100d_g2w]
+    9. modeltype:'glove' + corpus:'twitter' + dimenstion:50 + size:'none' ---> [glove_twitter_27B_50d_g2w]
+    10. modeltype:'glove' + corpus:'twitter' + dimenstion:25 + size:'none' ---> [glove_twitter_27B_25d_g2w]
     
     <word2vec model>
     11. modeltype:'word2vec'+ corpus:'GoogleNews'+ dimenstion:300 + size:'none' ---> [word2vec_GoogleNews] 
+    
     """
     
     wordlist = readfiles(file)
@@ -347,18 +390,108 @@ def Word_vector(file, modeltype = 'glove', corpus = 'common', dimension = 300, s
     if not os.path.exists('results'):
         os.makedirs('results')
     outpath = 'results/wordVector_' + modelname + '.' + filetype
-    savefiles(wordlist,wordvectorlist,outpath,filetype)        
+    savefiles(wordlist,wordvectorlist,outpath,filetype,outword)        
 
 def Clean_sentence(sentencelist): 
-    # delete punctuation
+    """
+        clean the sentence by delete punctuation and stopwords
+        
+    Parameters
+    ----------
+    sentencelist : list
+        list of sentence
+    
+    Returns
+    ----------
+    wordlist : nested list
+        list of word list
+    
+    """
+    # delete punctuation, keep only letters
     wordlist = [re.sub(r'[^\w\s]', ' ', sentence).split() for sentence in sentencelist]
-    # delete stopwords
+    # delete words in stopwords
     for i in range(len(wordlist)):
         wordlist[i] = [w for w in wordlist[i] if w.lower() not in stopwords]
     return wordlist
             
-def Sentence_vector(file, modeltype = 'bert', corpus = 'common', layer = 12, dimension = 768, size = 'L', case = 'uncase', corpustype = 'none', filetype = 'csv'):            
+def Sentence_vector(file, modeltype = 'bert', corpus = 'common', layer = 12, dimension = 768, size = 'L', case = 'uncase', corpustype = 'none', filetype = 'csv', outword = 'n'):            
+    """
     
+    Parameters
+    ----------
+    file : file
+        Sentence filepath
+    modeltype : str, optional
+        you can select different model {'bert','word2vec','glove'}, default option is 'bert' 
+    corpus : str, optional, **only for glove and word2vec**
+        you can select different corpus that used to train model:
+        ---> glove model : {'common','wiki','twitter'}, default option is 'common'
+        ---> word2vec model : {'GoogleNews'}
+        ---> bert model do not have this option
+    layer : int, optional, **only for bert**
+        you can select different layer {2,4,6,8,10,12,24}, default optioni is 12
+    dimension : int, optional
+        you can select different dimension of pre-trained model:
+        ---> bert model : {128, 256, 512, 768, 1024}, default option is 768
+        ---> glove model : {25, 50, 100, 200, 300}, 
+        ---> word2vec model : {300}
+    size : str, optional, **only for glove**
+        you can select different size of pre-trained model {'L', 'M'}
+    case : str , optional, **only for bert**
+        you can select different casetype {'uncase', 'case'}
+    corpustype : str, optional, **only for bert model when layer = 24**
+        you can select different corpus type {'none','wwm'}
+    filetype : str, optional
+        you can select outfile format {'txt','csv','xlsx'}, default format is txt
+    outword : str, optional
+        you can select if output words and vectors into one file {'n','y'}    
+    
+    Returns
+    ----------
+        output a file include sentences(optional) and vectors
+    
+    Entire model selection
+    ----------
+    <bert model>
+    'uncase'
+    1. modeltype:'bert' + layer:2 + dimenstion:128 + case:'uncase' + corpustype:'none' ---> [bert_L_2_H_128d_uncase] 
+    2. modeltype:'bert' + layer:2 + dimenstion:256 + case:'uncase' + corpustype:'none' ---> [bert_L_2_H_256d_uncase] 
+    3. modeltype:'bert' + layer:2 + dimenstion:512 + case:'uncase' + corpustype:'none' ---> [bert_L_2_H_512d_uncase] 
+    4. modeltype:'bert' + layer:2 + dimenstion:768 + case:'uncase' + corpustype:'none' ---> [bert_L_2_H_768d_uncase] 
+    5. modeltype:'bert' + layer:4 + dimenstion:128 + case:'uncase' + corpustype:'none' ---> [bert_L_4_H_128d_uncase] 
+    6. modeltype:'bert' + layer:4 + dimenstion:256 + case:'uncase' + corpustype:'none' ---> [bert_L_4_H_256d_uncase] 
+    7. modeltype:'bert' + layer:4 + dimenstion:512 + case:'uncase' + corpustype:'none' ---> [bert_L_4_H_512d_uncase] 
+    8. modeltype:'bert' + layer:4 + dimenstion:768 + case:'uncase' + corpustype:'none' ---> [bert_L_4_H_768d_uncase] 
+    9. modeltype:'bert' + layer:6 + dimenstion:128 + case:'uncase' + corpustype:'none' ---> [bert_L_6_H_128d_uncase] 
+    10. modeltype:'bert' + layer:6 + dimenstion:256 + case:'uncase' + corpustype:'none' ---> [bert_L_6_H_256d_uncase] 
+    11. modeltype:'bert' + layer:6 + dimenstion:512 + case:'uncase' + corpustype:'none' ---> [bert_L_6_H_512d_uncase] 
+    12. modeltype:'bert' + layer:6 + dimenstion:768 + case:'uncase' + corpustype:'none' ---> [bert_L_6_H_768d_uncase] 
+    13. modeltype:'bert' + layer:8 + dimenstion:128 + case:'uncase' + corpustype:'none' ---> [bert_L_8_H_128d_uncase] 
+    14. modeltype:'bert' + layer:8 + dimenstion:256 + case:'uncase' + corpustype:'none' ---> [bert_L_8_H_256d_uncase] 
+    15. modeltype:'bert' + layer:8 + dimenstion:512 + case:'uncase' + corpustype:'none' ---> [bert_L_8_H_512d_uncase] 
+    16. modeltype:'bert' + layer:8 + dimenstion:768 + case:'uncase' + corpustype:'none' ---> [bert_L_8_H_768d_uncase] 
+    17. modeltype:'bert' + layer:10 + dimenstion:128 + case:'uncase' + corpustype:'none' ---> [bert_L_10_H_128d_uncase] 
+    18. modeltype:'bert' + layer:10 + dimenstion:256 + case:'uncase' + corpustype:'none' ---> [bert_L_10_H_256d_uncase] 
+    19. modeltype:'bert' + layer:10 + dimenstion:512 + case:'uncase' + corpustype:'none' ---> [bert_L_10_H_512d_uncase] 
+    20. modeltype:'bert' + layer:10 + dimenstion:768 + case:'uncase' + corpustype:'none' ---> [bert_L_10_H_768d_uncase] 
+    21. modeltype:'bert' + layer:12 + dimenstion:128 + case:'uncase' + corpustype:'none' ---> [bert_L_12_H_128d_uncase] 
+    22. modeltype:'bert' + layer:12 + dimenstion:256 + case:'uncase' + corpustype:'none' ---> [bert_L_12_H_256d_uncase] 
+    23. modeltype:'bert' + layer:12 + dimenstion:512 + case:'uncase' + corpustype:'none' ---> [bert_L_12_H_512d_uncase] 
+    24. modeltype:'bert' + layer:12 + dimenstion:768 + case:'uncase' + corpustype:'none' ---> [bert_L_12_H_768d_uncase] 
+    25. modeltype:'bert' + layer:24 + dimenstion:1024 + case:'uncase' + corpustype:'none' ---> [bert_L_24_H_1024d_uncase] 
+    26. modeltype:'bert' + layer:24 + dimenstion:1024 + case:'uncase' + corpustype:'wwm' ---> [bert_L_24_H_1024d_uncase_wwm] 
+    
+    'case'
+    27. modeltype:'bert' + layer:12 + dimenstion:768 + case:'case' + corpustype:'none' ---> [bert_L_12_H_768d_case] 
+    28. modeltype:'bert' + layer:24 + dimenstion:1024 + case:'case' + corpustype:'none' ---> [bert_L_24_H_1024d_case] 
+    29. modeltype:'bert' + layer:24 + dimenstion:1024 + case:'case' + corpustype:'wwm' ---> [bert_L_24_H_1024d_case_wwm] 
+    
+    <glove model>
+        same to Word_vector
+    <word2vec model>
+        same to Word_vector
+    
+    """
     sentencelist = readfiles(file)
     sentencevectorlist = []
     # select different model
@@ -392,20 +525,10 @@ def Sentence_vector(file, modeltype = 'bert', corpus = 'common', layer = 12, dim
     if not os.path.exists('results'):
         os.makedirs('results')
     outpath = 'results/sentenceVector_' + modelname + '.' + filetype
-    savefiles(sentencelist,sentencevectorlist,outpath,filetype)
+    savefiles(sentencelist,sentencevectorlist,outpath,filetype,outword)
     print('< -- results has output -- >')
     
     # kill current bert-service
-    close_bert()
-    print('< -- bert service close -- >')
-    # pid = os.getpid()
-    # os.kill(pid, signal.SIGTERM)
+    # print('< -- bert service close -- >')
     
-
-    
-    
-    
-    
-    
-    
-            
+     
