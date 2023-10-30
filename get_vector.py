@@ -21,7 +21,7 @@ Module Help:
 	get_glove_model_by_diff_para
 	get_bert_model_by_diff_para
 3. Get vector 
-	get vector of each word
+	get_word_vector_from_model
 	Word_vector
 	Sentence_vector
 	Clean_sentence
@@ -325,74 +325,8 @@ def get_word_vector_from_model(wordlist,model,dimension=300):
         wordvectorlist.append(vec)
     return wordvectorlist
 
-"""
-get word vector by different pre-trained model
-"""         
-def Word_vector(file, modeltype = 'glove', corpus = 'common', dimension = 300, size = 'L', filetype = 'csv', outword = 'n'):
-    """
-    
-    Parameters
-    ----------
-    file : file
-        wordlist filepath
-    modeltype : str, optional
-        you can select different model {'word2vec','glove'}, default option is 'glove' 
-    corpus : str, optional
-        you can select different corpus that used to train model {'common','wiki','twitter'}, default option is 'common'
-    dimension : int, optional
-        you can select different dimension of pre-trained model {25, 50, 100, 200, 300}, default option is 300
-    size : str, optional
-        you can select different size of pre-trained model {'L', 'M'}
-        ** only glove model **
-    filetype : str, optional
-        you can select outfile format {'txt','csv','xlsx'}, defult format is txt
-    outword : str, optional
-        you can select if output words and vectors into one file {'n','y'}
-        
-    Returns
-    ----------
-        output a file include words(optional) and vectors
-        
-    Entire model selection
-    ----------
-    <glove model>
-    1. modeltype:'glove' + corpus:'common' + dimenstion:300 + size:'L' ---> [glove_840B_300d_g2w] [default]
-    2. modeltype:'glove' + corpus:'common' + dimenstion:300 + size:'M' ---> [glove_42B_300d_g2w]
-    3. modeltype:'glove' + corpus:'wiki' + dimenstion:300 + size:'none' ---> [glove_6B_300d_g2w]
-    4. modeltype:'glove' + corpus:'wiki' + dimenstion:200 + size:'none' ---> [glove_6B_200d_g2w]
-    5. modeltype:'glove' + corpus:'wiki' + dimenstion:100 + size:'none' ---> [glove_6B_100d_g2w]
-    6. modeltype:'glove' + corpus:'wiki' + dimenstion:50 + size:'none' ---> [glove_6B_50d_g2w]
-    7. modeltype:'glove' + corpus:'twitter' + dimenstion:200 + size:'none' ---> [glove_twitter_27B_200d_g2w]
-    8. modeltype:'glove' + corpus:'twitter' + dimenstion:100 + size:'none' ---> [glove_twitter_27B_100d_g2w]
-    9. modeltype:'glove' + corpus:'twitter' + dimenstion:50 + size:'none' ---> [glove_twitter_27B_50d_g2w]
-    10. modeltype:'glove' + corpus:'twitter' + dimenstion:25 + size:'none' ---> [glove_twitter_27B_25d_g2w]
-    
-    <word2vec model>
-    11. modeltype:'word2vec'+ corpus:'GoogleNews'+ dimenstion:300 + size:'none' ---> [word2vec_GoogleNews] 
-    
-    """
-    
-    wordlist = readfiles(file)
-    wordvectorlist = []
-    
-    # select different model
-    if modeltype == 'glove':
-        model,size,dimension = get_glove_model_by_diff_para(corpus = corpus, dimension = dimension, size = size)
-    elif modeltype == 'word2vec':
-        model,size,dimension = get_word2vec_model_by_diff_para(corpus = corpus)
-    else :
-        print('please input the right modeltype:{"glove","word2vec"}')
-    
-    wordvectorlist = get_word_vector_from_model(wordlist = wordlist,model = model,dimension=dimension)
-    
-    # output to file        
-    modelname = modeltype + '_' + corpus + '_' + str(dimension) + '_' + size
-    if not os.path.exists('results'):
-        os.makedirs('results')
-    outpath = 'results/wordVector_' + modelname + '.' + filetype
-    savefiles(wordlist,wordvectorlist,outpath,filetype,outword)        
 
-def Clean_sentence(sentencelist): 
+def Clean_text(sentencelist, ifstpw=0): 
     """
         clean the sentence by delete punctuation and stopwords
         
@@ -400,6 +334,8 @@ def Clean_sentence(sentencelist):
     ----------
     sentencelist : list
         list of sentence
+    ifstpw : bool
+        if delete words in stopwords {0,1} default is 0, do not delete words
     
     Returns
     ----------
@@ -409,12 +345,20 @@ def Clean_sentence(sentencelist):
     """
     # delete punctuation, keep only letters
     wordlist = [re.sub(r'[^\w\s]', ' ', sentence).split() for sentence in sentencelist]
+    if ifstpw == 1:
     # delete words in stopwords
-    for i in range(len(wordlist)):
-        wordlist[i] = [w for w in wordlist[i] if w.lower() not in stopwords]
+        for i in range(len(wordlist)):
+            wordlist[i] = [w for w in wordlist[i] if w.lower() not in stopwords]
+    elif ifstpw == 0:
+        for i in range(len(wordlist)):
+            wordlist[i] = [w for w in wordlist[i]]
     return wordlist
+
+"""
+get vector of each row of text, if the word is not in this model, output nan 
+"""
             
-def Sentence_vector(file, modeltype = 'bert', corpus = 'common', layer = 12, dimension = 768, size = 'L', case = 'uncase', corpustype = 'none', filetype = 'csv', outword = 'n'):            
+def Text_vector(file, modeltype = 'bert', corpus = 'common', layer = 12, dimension = 768, size = 'L', case = 'uncase', corpustype = 'none', filetype = 'csv', outword = 'n',ifstpw=0):            
     """
     
     Parameters
@@ -445,7 +389,9 @@ def Sentence_vector(file, modeltype = 'bert', corpus = 'common', layer = 12, dim
         you can select outfile format {'txt','csv','xlsx'}, default format is txt
     outword : str, optional
         you can select if output words and vectors into one file {'n','y'}    
-    
+    ifstpw : bool
+        if delete words in stopwords {0,1} default is 0, do not delete words
+
     Returns
     ----------
         output a file include sentences(optional) and vectors
@@ -486,10 +432,20 @@ def Sentence_vector(file, modeltype = 'bert', corpus = 'common', layer = 12, dim
     28. modeltype:'bert' + layer:24 + dimenstion:1024 + case:'case' + corpustype:'none' ---> [bert_L_24_H_1024d_case] 
     29. modeltype:'bert' + layer:24 + dimenstion:1024 + case:'case' + corpustype:'wwm' ---> [bert_L_24_H_1024d_case_wwm] 
     
-    <glove model>
-        same to Word_vector
-    <word2vec model>
-        same to Word_vector
+   <glove model>
+   1. modeltype:'glove' + corpus:'common' + dimenstion:300 + size:'L' ---> [glove_840B_300d_g2w] [default]
+   2. modeltype:'glove' + corpus:'common' + dimenstion:300 + size:'M' ---> [glove_42B_300d_g2w]
+   3. modeltype:'glove' + corpus:'wiki' + dimenstion:300 + size:'none' ---> [glove_6B_300d_g2w]
+   4. modeltype:'glove' + corpus:'wiki' + dimenstion:200 + size:'none' ---> [glove_6B_200d_g2w]
+   5. modeltype:'glove' + corpus:'wiki' + dimenstion:100 + size:'none' ---> [glove_6B_100d_g2w]
+   6. modeltype:'glove' + corpus:'wiki' + dimenstion:50 + size:'none' ---> [glove_6B_50d_g2w]
+   7. modeltype:'glove' + corpus:'twitter' + dimenstion:200 + size:'none' ---> [glove_twitter_27B_200d_g2w]
+   8. modeltype:'glove' + corpus:'twitter' + dimenstion:100 + size:'none' ---> [glove_twitter_27B_100d_g2w]
+   9. modeltype:'glove' + corpus:'twitter' + dimenstion:50 + size:'none' ---> [glove_twitter_27B_50d_g2w]
+   10. modeltype:'glove' + corpus:'twitter' + dimenstion:25 + size:'none' ---> [glove_twitter_27B_25d_g2w]
+   
+   <word2vec model>
+   11. modeltype:'word2vec'+ corpus:'GoogleNews'+ dimenstion:300 + size:'none' ---> [word2vec_GoogleNews] 
     
     """
     sentencelist = readfiles(file)
@@ -511,12 +467,18 @@ def Sentence_vector(file, modeltype = 'bert', corpus = 'common', layer = 12, dim
             model,size,dimension = get_word2vec_model_by_diff_para(corpus = corpus)
         
         # clean sentence by delete punctation and stopwords
-        wordlist = Clean_sentence(sentencelist)
+        wordlist = Clean_text(sentencelist,ifstpw)
         
         for wl in wordlist:
+            # wl = wordlist[1316]
             wlvec = get_word_vector_from_model(wordlist = wl,model = model,dimension=dimension)
             wlvec = [v for v in wlvec if np.isnan(v).any() == 0]
-            sentencevectorlist.append(np.mean(wlvec,axis=0))
+            if len(wlvec) == 0:
+                vec = np.empty(dimension)
+                vec[:] = np.nan
+                sentencevectorlist.append(vec)
+            else :
+                sentencevectorlist.append(np.mean(wlvec,axis=0))
         modelname = modeltype + '_' + corpus + '_' + str(dimension) + '_' + size
         
     else :
@@ -524,11 +486,10 @@ def Sentence_vector(file, modeltype = 'bert', corpus = 'common', layer = 12, dim
         
     if not os.path.exists('results'):
         os.makedirs('results')
-    outpath = 'results/sentenceVector_' + modelname + '.' + filetype
+    outpath = 'results/Vector_' + modelname + '.' + filetype
     savefiles(sentencelist,sentencevectorlist,outpath,filetype,outword)
     print('< -- results has output -- >')
     
     # kill current bert-service
     # print('< -- bert service close -- >')
     
-     
