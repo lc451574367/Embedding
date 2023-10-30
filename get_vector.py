@@ -22,9 +22,8 @@ Module Help:
 	get_bert_model_by_diff_para
 3. Get vector 
 	get_word_vector_from_model
-	Word_vector
-	Sentence_vector
-	Clean_sentence
+	Text_vector
+	Clean_text
 
 @author: Cheng Liu
 """
@@ -291,12 +290,11 @@ def get_bert_model_by_diff_para(layer = 12, dimension = 768, case = 'uncase', co
     print('------------------------------------\n')
     return model,layer,dimension,case,corpustype
 
-"""
-get vector of each word, if the word is not in this model, output nan 
-"""
+
 def get_word_vector_from_model(wordlist,model,dimension=300):
     """ 
-        
+        get vector of each word, if the word is not in this model, output nan 
+	
     Parameters
     ----------
     wordlist : list
@@ -328,12 +326,12 @@ def get_word_vector_from_model(wordlist,model,dimension=300):
 
 def Clean_text(sentencelist, ifstpw=0): 
     """
-        clean the sentence by delete punctuation and stopwords
+        clean the text by delete punctuation and stopwords
         
     Parameters
     ----------
     sentencelist : list
-        list of sentence
+        list of text
     ifstpw : bool
         if delete words in stopwords {0,1} default is 0, do not delete words
     
@@ -354,19 +352,17 @@ def Clean_text(sentencelist, ifstpw=0):
             wordlist[i] = [w for w in wordlist[i]]
     return wordlist
 
-"""
-get vector of each row of text, if the word is not in this model, output nan 
-"""
             
-def Text_vector(file, modeltype = 'bert', corpus = 'common', layer = 12, dimension = 768, size = 'L', case = 'uncase', corpustype = 'none', filetype = 'csv', outword = 'n',ifstpw=0):            
+def Text_vector(file, modeltype = 'glove', corpus = 'common', layer = 12, dimension = 300, size = 'L', case = 'uncase', corpustype = 'none', filetype = 'csv', outword = 'n',ifstpw=0):            
     """
-    
+    	get vector of each row of text, if the word is not in this model, output nan 
+     
     Parameters
     ----------
     file : file
-        Sentence filepath
+        Text filepath
     modeltype : str, optional
-        you can select different model {'bert','word2vec','glove'}, default option is 'bert' 
+        you can select different model {'bert','word2vec','glove'}, default option is 'glove' 
     corpus : str, optional, **only for glove and word2vec**
         you can select different corpus that used to train model:
         ---> glove model : {'common','wiki','twitter'}, default option is 'common'
@@ -377,7 +373,7 @@ def Text_vector(file, modeltype = 'bert', corpus = 'common', layer = 12, dimensi
     dimension : int, optional
         you can select different dimension of pre-trained model:
         ---> bert model : {128, 256, 512, 768, 1024}, default option is 768
-        ---> glove model : {25, 50, 100, 200, 300}, 
+        ---> glove model : {25, 50, 100, 200, 300}, default option is 300
         ---> word2vec model : {300}
     size : str, optional, **only for glove**
         you can select different size of pre-trained model {'L', 'M'}
@@ -386,7 +382,7 @@ def Text_vector(file, modeltype = 'bert', corpus = 'common', layer = 12, dimensi
     corpustype : str, optional, **only for bert model when layer = 24**
         you can select different corpus type {'none','wwm'}
     filetype : str, optional
-        you can select outfile format {'txt','csv','xlsx'}, default format is txt
+        you can select outfile format {'txt','csv','xlsx'}, default format is csv
     outword : str, optional
         you can select if output words and vectors into one file {'n','y'}    
     ifstpw : bool
@@ -394,7 +390,7 @@ def Text_vector(file, modeltype = 'bert', corpus = 'common', layer = 12, dimensi
 
     Returns
     ----------
-        output a file include sentences(optional) and vectors
+        output a file include Text(optional) and vectors
     
     Entire model selection
     ----------
@@ -470,7 +466,6 @@ def Text_vector(file, modeltype = 'bert', corpus = 'common', layer = 12, dimensi
         wordlist = Clean_text(sentencelist,ifstpw)
         
         for wl in wordlist:
-            # wl = wordlist[1316]
             wlvec = get_word_vector_from_model(wordlist = wl,model = model,dimension=dimension)
             wlvec = [v for v in wlvec if np.isnan(v).any() == 0]
             if len(wlvec) == 0:
