@@ -28,7 +28,7 @@ The other models are not provided due to the upload size limitation, if you want
 "2. Transfer format"
 """
 If you download the glove pre-trained vector from the official website,
-you should first convert the format to word2vec, then you will use the glove vector after format coversion to get embedding vectors
+you should first convert the format to word2vec, then you can use the glove vector after format coversion to get embedding vectors
 """
 glove_model = 'models/glove/glove.6B.50d.txt'
 g2w_glove_model = 'models/glove/glove.6B.50d.g2w.txt'
@@ -38,13 +38,12 @@ glove2word2vec(glove_model, g2w_glove_model)
 """
 After download the models, you can get different embedding vectors by different parameters.
 """
-"1. word embedding vector"
-wordpath = 'test/test.txt'
-Word_vector(wordpath, modeltype='glove', corpus='common', dimension=300)
-Word_vector(wordpath, modeltype='word2vec', corpus='GoogleNews')
 
-"2. sentence embedding vector"
+wordpath = 'test/test.txt'
+Text_vector(wordpath, modeltype='glove', corpus='common', dimension=300)
+Text_vector(wordpath, modeltype='word2vec', corpus='GoogleNews')
+
 sentencepath = 'test/sentence.txt'
-Sentence_vector(sentencepath, modeltype = 'bert', layer = 10, dimension=128) 
-Sentence_vector(sentencepath, modeltype = 'glove')
-Sentence_vector(sentencepath, modeltype = 'word2vec')
+Text_vector(sentencepath, modeltype = 'bert', layer = 10, dimension=128) 
+Text_vector(sentencepath, modeltype = 'glove')
+Text_vector(sentencepath, modeltype = 'word2vec')
