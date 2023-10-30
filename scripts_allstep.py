@@ -39,10 +39,12 @@ glove2word2vec(glove_model, g2w_glove_model)
 After download the models, you can get different embedding vectors by different parameters.
 """
 
+"3.1 word embedding vector"
 wordpath = 'test/test.txt'
 Text_vector(wordpath, modeltype='glove', corpus='common', dimension=300)
 Text_vector(wordpath, modeltype='word2vec', corpus='GoogleNews')
 
+"3.2 sentence embedding vector"
 sentencepath = 'test/sentence.txt'
 Text_vector(sentencepath, modeltype = 'bert', layer = 10, dimension=128) 
 Text_vector(sentencepath, modeltype = 'glove')
