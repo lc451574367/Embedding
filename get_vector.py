@@ -16,6 +16,7 @@ Module Help:
 	get_word2vec_model
 	get_glove_model
 	get_bert_model
+    get_gpt2_model
 2. Get different pre-trained model according different parameters :
 	get_word2vec_model_by_diff_para
 	get_glove_model_by_diff_para
@@ -34,9 +35,14 @@ from model_path import *
 from bert_serving.client import BertClient
 import subprocess
 from textprocess import *
+import nltk
 from nltk.corpus import stopwords
 import re
+from transformers import GPT2Model, GPT2Tokenizer
+import torch
 
+
+nltk.download("stopwords")
 stopwords = stopwords.words('english')
 
 """
@@ -52,12 +58,18 @@ def get_glove_model(model_path):
 
 def get_bert_model(model_name):
     print('---> model name : ' + model_name)
-    command = 'bert-serving-start ' + '-model_dir '+ bert_path + '/' + model_name + '/' + ' -num_worker=1'
+    command = 'bert-serving-start ' + '-model_dir '+ bert_path + '/' + model_name + '/' + ' -num_worker=1' + ' -max_seq_len=150'
     p = subprocess.Popen(command)
     print('< -- bert service start -->')
     bc = BertClient()
     print('< -- bert client start -->')
     return bc
+
+def get_gpt2_model(model_name):
+    print('---> model name : ' + model_name)
+    model = GPT2Model.from_pretrained(model_name)
+    tokenizer = GPT2Tokenizer.from_pretrained(model_name)
+    return model,tokenizer
 
 def close_bert():
     # kill current bert-service
@@ -456,11 +468,31 @@ def Text_vector(file, modeltype = 'glove', corpus = 'common', layer = 12, dimens
         # model name
         modelname = modeltype + '_L' + str(layer) + '_' + str(dimension) + '_' + case + '_' + corpustype
     
+    elif modeltype == 'gpt2':
+        model,tokenizer = get_gpt2_model(gpt2_path)
+        print('< -- get model success! -- >')
+        # divide text
+        chunk_size = 1000
+        chunks = [sentencelist[i:i + chunk_size] for i in range(0, len(sentencelist), chunk_size)]
+        # process by chunks
+        all_outputs = []
+        for chunk in chunks:
+            sentence_ids = tokenizer.encode(chunk, return_tensors="pt")
+            with torch.no_grad():
+                output = model(sentence_ids)
+                all_outputs.append(output)
+        # merge outputs
+        for out in all_outputs:
+            sentencevectorlist.extend(out.last_hidden_state.numpy().squeeze())
+        modelname = modeltype
+    
     elif modeltype == 'glove' or modeltype == 'word2vec':
         if modeltype == 'glove':
             model,size,dimension = get_glove_model_by_diff_para(corpus = corpus, dimension = dimension, size = size)
+            print('< -- get model success! -- >')
         elif modeltype == 'word2vec':
             model,size,dimension = get_word2vec_model_by_diff_para(corpus = corpus)
+            print('< -- get model success! -- >')
         
         # clean sentence by delete punctation and stopwords
         wordlist = Clean_text(sentencelist,ifstpw)
@@ -487,4 +519,3 @@ def Text_vector(file, modeltype = 'glove', corpus = 'common', layer = 12, dimens
     
     # kill current bert-service
     # print('< -- bert service close -- >')
-    
