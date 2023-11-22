@@ -15,6 +15,8 @@ To run the python scripts :
 - nltk
 - numpy
 - pandas
+- transformers
+- torch
 
 ## Installation
 
