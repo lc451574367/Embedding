@@ -97,5 +97,5 @@ bert_multilingual
 """
 bert_L_12H_768d_case_multi = "multilingual_L-12_H-768_A-12"
 
-
-
+"-------------------------------------3. bert models-------------------------------------------"
+gpt2_path = 'models/gpt2'
