@@ -5,18 +5,9 @@ This repository includes a set of python scripts for getting embedding vectors o
 ## Dependencies
 
 To run the python scripts : 
-- Python 3.7
-- tensorflow 1.14.0
-- bert-serving-server
-- bert-serving-client
-- gensim
-- scipy
-- protobuf 3.20.1
-- nltk
-- numpy
-- pandas
-- transformers
-- torch
+```
+pip install -i https://pypi.tuna.tsinghua.edu.cn/simple gensim numpy scipy pandas transformers torch openpyxl nltk Pillow
+```
 
 ## Installation
 
