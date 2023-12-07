@@ -44,58 +44,43 @@ glove_twitter_27B_200d_g2w = os.path.join(models,'glove/glove.twitter.27B.200d.g
 
 "-------------------------------------3. bert models-------------------------------------------"
 """
-bert_base_uncase totally 24
-"""
-bert_path = 'models/bert'
 
-bert_L_2_H_128d_uncase = "uncased_L-2_H-128_A-2"
-bert_L_2_H_256d_uncase = "uncased_L-2_H-256_A-4"
-bert_L_2_H_512d_uncase = "uncased_L-2_H-512_A-8"
-bert_L_2_H_768d_uncase = "uncased_L-2_H-768_A-12"
+<bert model>
 
-bert_L_4_H_128d_uncase = "uncased_L-4_H-128_A-2"
-bert_L_4_H_256d_uncase = "uncased_L-4_H-256_A-4"
-bert_L_4_H_512d_uncase = "uncased_L-4_H-512_A-8"
-bert_L_4_H_768d_uncase = "uncased_L-4_H-768_A-12"
-
-bert_L_6_H_128d_uncase = "uncased_L-6_H-128_A-2"
-bert_L_6_H_256d_uncase = "uncased_L-6_H-256_A-4"
-bert_L_6_H_512d_uncase = "uncased_L-6_H-512_A-8"
-bert_L_6_H_768d_uncase = "uncased_L-6_H-768_A-12"
-
-bert_L_8_H_128d_uncase = "uncased_L-8_H-128_A-2"
-bert_L_8_H_256d_uncase = "uncased_L-8_H-256_A-4"
-bert_L_8_H_512d_uncase = "uncased_L-8_H-512_A-8"
-bert_L_8_H_768d_uncase = "uncased_L-8_H-768_A-12"
-
-bert_L_10_H_128d_uncase = "uncased_L-10_H-128_A-2"
-bert_L_10_H_256d_uncase = "uncased_L-10_H-256_A-4"
-bert_L_10_H_512d_uncase = "uncased_L-10_H-512_A-8"
-bert_L_10_H_768d_uncase = "uncased_L-10_H-768_A-12"
-
-bert_L_12_H_128d_uncase = "uncased_L-12_H-128_A-2"
-bert_L_12_H_256d_uncase = "uncased_L-12_H-256_A-4"
-bert_L_12_H_512d_uncase = "uncased_L-12_H-512_A-8"
-bert_L_12_H_768d_uncase = "uncased_L-12_H-768_A-12"
+1. modeltype:'bert' + layer:2 + dimenstion:128 + case:'uncase' + corpustype:'none' ---> [bert_L_2_H_128d_uncase] 
+2. modeltype:'bert' + layer:2 + dimenstion:256 + case:'uncase' + corpustype:'none' ---> [bert_L_2_H_256d_uncase] 
+3. modeltype:'bert' + layer:2 + dimenstion:512 + case:'uncase' + corpustype:'none' ---> [bert_L_2_H_512d_uncase] 
+4. modeltype:'bert' + layer:2 + dimenstion:768 + case:'uncase' + corpustype:'none' ---> [bert_L_2_H_768d_uncase] 
+5. modeltype:'bert' + layer:4 + dimenstion:128 + case:'uncase' + corpustype:'none' ---> [bert_L_4_H_128d_uncase] 
+6. modeltype:'bert' + layer:4 + dimenstion:256 + case:'uncase' + corpustype:'none' ---> [bert_L_4_H_256d_uncase] 
+7. modeltype:'bert' + layer:4 + dimenstion:512 + case:'uncase' + corpustype:'none' ---> [bert_L_4_H_512d_uncase] 
+8. modeltype:'bert' + layer:4 + dimenstion:768 + case:'uncase' + corpustype:'none' ---> [bert_L_4_H_768d_uncase] 
+9. modeltype:'bert' + layer:6 + dimenstion:128 + case:'uncase' + corpustype:'none' ---> [bert_L_6_H_128d_uncase] 
+10. modeltype:'bert' + layer:6 + dimenstion:256 + case:'uncase' + corpustype:'none' ---> [bert_L_6_H_256d_uncase] 
+11. modeltype:'bert' + layer:6 + dimenstion:512 + case:'uncase' + corpustype:'none' ---> [bert_L_6_H_512d_uncase] 
+12. modeltype:'bert' + layer:6 + dimenstion:768 + case:'uncase' + corpustype:'none' ---> [bert_L_6_H_768d_uncase] 
+13. modeltype:'bert' + layer:8 + dimenstion:128 + case:'uncase' + corpustype:'none' ---> [bert_L_8_H_128d_uncase] 
+14. modeltype:'bert' + layer:8 + dimenstion:256 + case:'uncase' + corpustype:'none' ---> [bert_L_8_H_256d_uncase] 
+15. modeltype:'bert' + layer:8 + dimenstion:512 + case:'uncase' + corpustype:'none' ---> [bert_L_8_H_512d_uncase] 
+16. modeltype:'bert' + layer:8 + dimenstion:768 + case:'uncase' + corpustype:'none' ---> [bert_L_8_H_768d_uncase] 
+17. modeltype:'bert' + layer:10 + dimenstion:128 + case:'uncase' + corpustype:'none' ---> [bert_L_10_H_128d_uncase] 
+18. modeltype:'bert' + layer:10 + dimenstion:256 + case:'uncase' + corpustype:'none' ---> [bert_L_10_H_256d_uncase] 
+19. modeltype:'bert' + layer:10 + dimenstion:512 + case:'uncase' + corpustype:'none' ---> [bert_L_10_H_512d_uncase] 
+20. modeltype:'bert' + layer:10 + dimenstion:768 + case:'uncase' + corpustype:'none' ---> [bert_L_10_H_768d_uncase] 
+21. modeltype:'bert' + layer:12 + dimenstion:128 + case:'uncase' + corpustype:'none' ---> [bert_L_12_H_128d_uncase] 
+22. modeltype:'bert' + layer:12 + dimenstion:256 + case:'uncase' + corpustype:'none' ---> [bert_L_12_H_256d_uncase] 
+23. modeltype:'bert' + layer:12 + dimenstion:512 + case:'uncase' + corpustype:'none' ---> [bert_L_12_H_512d_uncase] 
+24. modeltype:'bert' + layer:12 + dimenstion:768 + case:'uncase' + corpustype:'none' ---> [bert_L_12_H_768d_uncase] 
+25. modeltype:'bert' + layer:24 + dimenstion:1024 + case:'uncase' + corpustype:'none' ---> [bert_L_24_H_1024d_uncase] 
+26. modeltype:'bert' + layer:24 + dimenstion:1024 + case:'uncase' + corpustype:'wwm' ---> [bert_L_24_H_1024d_uncase_wwm] 
 
 """
-bert_base_case 
-"""
-bert_L_12_H_768d_case = "cased_L-12_H-768_A-12"
 
-"""
-bert_large 
-"""
-bert_L_24_H_1024d_uncase = "uncased_L-24_H-1024_A-16"
-bert_L_24_H_1024d_uncase_wwm = "wwm_uncased_L-24_H-1024_A-16"
 
-bert_L_24_H_1024d_case = "cased_L-24_H-1024_A-16"
-bert_L_24_H_1024d_case_wwm = "wwm_cased_L-24_H-1024_A-16"
+"-------------------------------------4. gpt2 models-------------------------------------------"
+gpt2_online_name = "gpt2"
+gpt2_local_path = "models/gpt2"
+"-------------------------------------5. clip models-------------------------------------------"
 
-"""
-bert_multilingual 
-"""
-bert_L_12H_768d_case_multi = "multilingual_L-12_H-768_A-12"
-
-"-------------------------------------3. bert models-------------------------------------------"
-gpt2_path = 'models/gpt2'
+clip_online_name = "openai/clip-vit-base-patch32"
+clip_local_path = "models/clip/clip-vit-base-patch32"
