@@ -38,13 +38,21 @@ glove2word2vec(glove_model, g2w_glove_model)
 """
 After download the models, you can get different embedding vectors by different parameters.
 """
-
-wordpath = 'test/test.txt'
+"3.1 get word embedding"
+wordpath = 'test/data/text/test.txt'
 Text_vector(wordpath, modeltype='glove', corpus='common', dimension=300)
 Text_vector(wordpath, modeltype='word2vec', corpus='GoogleNews')
-
-sentencepath = 'test/sentence.txt'
-Text_vector(sentencepath, modeltype = 'bert', layer = 10, dimension=128) 
+"3.2 get sentence embedding"
+sentencepath = 'test/data/text/sentence.txt'
+Text_vector(sentencepath, modeltype = 'bert') 
 Text_vector(sentencepath, modeltype = 'glove')
 Text_vector(sentencepath, modeltype = 'word2vec')
 Text_vector(sentencepath, modeltype = 'gpt2')
+Text_vector(sentencepath, modeltype = 'clip')
+"3.3 get image embedding"
+imagepath = 'test/data/image/imagefile.xlsx'
+Image_vector(imagepath)
+"3.4 get chinese word or sentence embedding"
+chinesepath = 'test/data/text/chinese.txt'
+Text_vector(chinesepath, modeltype = 'gpt2')
+Text_vector(chinesepath, modeltype = 'bert',language='cn')
