@@ -1,1 +1,2 @@
-download gpt model from https://huggingface.co/gpt2/tree/main
+Please download models from huggingface in this folder
+https://huggingface.co/gpt2
