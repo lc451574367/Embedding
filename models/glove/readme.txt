@@ -7,3 +7,9 @@ Common Crawl (840B tokens, 2.2M vocab, cased, 300d vectors, 2.03 GB download): g
 Twitter (2B tweets, 27B tokens, 1.2M vocab, uncased, 25d, 50d, 100d, & 200d vectors, 1.42 GB download): glove.twitter.27B.zip
 -------------------------------------------------------------------------------------------------------------------------------
 2. Unzip the vector files to this folder.
+3. If you download the glove pre-trained vector from the official website, you should first convert the format to word2vec, then you can use the glove vector after format conversion to get embedding vectors
+-------------------------------------------------------------------------------------------------------------------------------
+glove_model = 'models/glove/glove.6B.50d.txt'
+g2w_glove_model = 'models/glove/glove.6B.50d.g2w.txt'
+glove2word2vec(glove_model, g2w_glove_model)
+-------------------------------------------------------------------------------------------------------------------------------
