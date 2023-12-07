@@ -2,21 +2,22 @@
 """
 Created on Fri Oct 20 10:28:02 2023
 Dependency:
-	tensorflow 1.14.0
-	bert-serving-server
-	bert-serving-client
 	gensim
 	scipy
-	protobuf 3.20.1
 	nltk
 	numpy
 	pandas
+    transformers
+    torch
+    openpyxl
+    Pillow
 Module Help:
 1. load model : 
 	get_word2vec_model
 	get_glove_model
 	get_bert_model
     get_gpt2_model
+    get_clip_model
 2. Get different pre-trained model according different parameters :
 	get_word2vec_model_by_diff_para
 	get_glove_model_by_diff_para
@@ -25,6 +26,7 @@ Module Help:
 	get_word_vector_from_model
 	Text_vector
 	Clean_text
+    Image_vector
 
 @author: Cheng Liu
 """
@@ -38,8 +40,9 @@ from textprocess import *
 import nltk
 from nltk.corpus import stopwords
 import re
-from transformers import GPT2Model, GPT2Tokenizer
+from transformers import GPT2Model, GPT2Tokenizer, BertModel, BertTokenizer, CLIPModel, AutoProcessor,AutoTokenizer
 import torch
+from PIL import Image
 
 
 nltk.download("stopwords")
@@ -57,28 +60,39 @@ def get_glove_model(model_path):
     return model
 
 def get_bert_model(model_name):
-    print('---> model name : ' + model_name)
-    command = 'bert-serving-start ' + '-model_dir '+ bert_path + '/' + model_name + '/' + ' -num_worker=1' + ' -max_seq_len=150'
-    p = subprocess.Popen(command)
-    print('< -- bert service start -->')
-    bc = BertClient()
-    print('< -- bert client start -->')
-    return bc
-
-def get_gpt2_model(model_name):
-    print('---> model name : ' + model_name)
-    model = GPT2Model.from_pretrained(model_name)
-    tokenizer = GPT2Tokenizer.from_pretrained(model_name)
+    tokenizer = BertTokenizer.from_pretrained(model_name)
+    model = BertModel.from_pretrained(model_name)
     return model,tokenizer
 
-def close_bert():
-    # kill current bert-service
-    # outinfo = subprocess.Popen('netstat -ano|findstr 5555', stdout=subprocess.PIPE, shell=True).communicate()
-    # port = outinfo[0].decode().split()[-1]
-    # p = subprocess.Popen('taskkill -pid {port}', shell=True)
-    pid = os.getpid()
-    os.kill(pid, signal.SIGTERM)
+def get_gpt2_model():
+    try :
+        model = GPT2Model.from_pretrained(gpt2_online_name)
+        tokenizer = GPT2Tokenizer.from_pretrained(gpt2_online_name)
+    except :
+        print('\n------------------------------------')
+        print("Can't visit models online, load the models from local")
+        print('------------------------------------')
 
+        model = GPT2Model.from_pretrained(gpt2_local_path)
+        tokenizer = GPT2Tokenizer.from_pretrained(gpt2_local_path)
+
+    return model,tokenizer
+
+def get_clip_model():
+    try:
+        model = CLIPModel.from_pretrained(clip_online_name)
+        processor = AutoProcessor.from_pretrained(clip_online_name)
+        tokenizer = AutoTokenizer.from_pretrained(clip_online_name)
+
+    except : 
+        print('\n------------------------------------')
+        print("Can't visit models online, load the models from local")
+        print('------------------------------------')
+        model = CLIPModel.from_pretrained(clip_local_path)
+        processor = AutoProcessor.from_pretrained(clip_local_path)
+        tokenizer = AutoTokenizer.from_pretrained(clip_local_path)
+
+    return model,processor,tokenizer
 
 """
 Get different pre-trained model according different parameters
@@ -91,217 +105,142 @@ def get_word2vec_model_by_diff_para(corpus = 'GoogleNews'):
     print('Parameters :')
     print('---> corpus = ' + corpus + '\n---> dimension = ' + str(dimension) + '\n---> size = ' + size )
     print('------------------------------------\n')
+    """
+    <word2vec model>
+    modeltype:'word2vec'+ corpus:'GoogleNews'+ dimenstion:300 + size:'none' ---> [word2vec_GoogleNews] 
+    """
     return model,size,dimension
 
 def get_glove_model_by_diff_para(corpus = 'common', dimension = 300, size = 'L'):
-    if corpus == 'common':
-        dimension = 300
-        if size == 'L':
-            model = get_glove_model(glove_840B_300d_g2w)
-        elif size == 'M':
-            model = get_glove_model(glove_42B_300d_g2w)
-        else:
-            print('------------------------------------')
-            print('---> Warning: there is no dimension ' + str(dimension) + ', turn to the default option.')
-            print('---> Default size is [L], if you want to try other option, please input any one in {"L","M"}')
-    elif corpus == 'wiki':
-        size = 'none'
-        if dimension == 300:
-            model = get_glove_model(glove_6B_300d_g2w)
-        elif dimension == 200:
-            model = get_glove_model(glove_6B_200d_g2w)
-        elif dimension == 100:
-            model = get_glove_model(glove_6B_100d_g2w)
-        elif dimension == 50:
-            model = get_glove_model(glove_6B_50d_g2w)
-        else :
-            model = get_glove_model(glove_6B_300d_g2w)
-            print('------------------------------------')
-            print('---> Warning: there is no dimension ' + str(dimension) + ', turn to the default option.')
-            print('---> Default dimension is 300, if you want to try other option, please input any one in {300,200,100,50}')
-            dimension = 300
-    elif corpus == 'twitter':
-        size = 'none'
-        if dimension == 200:
-            model = get_glove_model(glove_twitter_27B_200d_g2w)
-        elif dimension == 100:
-            model = get_glove_model(glove_twitter_27B_100d_g2w)
-        elif dimension == 50:
-            model = get_glove_model(glove_twitter_27B_50d_g2w)
-        elif dimension == 25:
-            model = get_glove_model(glove_twitter_27B_25d_g2w)
-        else :
-            model = get_glove_model(glove_twitter_27B_200d_g2w)
-            print('------------------------------------')
-            print('---> Warning: there is no dimension ' + str(dimension) + ', turn to the default option.')
-            print('---> Default dimension is 200, if you want to try other option, please input any one in {200,100,50,25}')
-            dimension = 200
-    else :
+    
+    path = 'models/glove/'
+    if corpus == 'twitter' :
+        byte = '27B'
+        cname = 'twitter'
+    
+    else:
+        cname = ''
+        if corpus == 'wiki' :
+            byte = '6B'
+       
+        elif corpus == 'common' : 
+            if size == 'L':
+                byte = '840B'
+            elif size == 'M':
+                byte = '42B'
+    
+        
+    name = 'glove.' + cname + byte + '.' + str(dimension) + 'd.g2w.txt'
+    local_path = path + name
+    
+    try : 
+        model = get_glove_model(local_path)
+        print('------------------------------------')
+        print('Parameters :')
+        print('---> corpus = ' + corpus + '\n---> dimension = ' + str(dimension) + '\n---> size = ' + size )
+        print('------------------------------------\n')
+
+    except :
+        print('!!the parameter you input are error!!')
+        print('entire model information:')
+        print("1. modeltype:'glove' + corpus:'common' + dimenstion:300 + size:'L' ---> [glove_840B_300d_g2w] [default]")
+        print("2. modeltype:'glove' + corpus:'common' + dimenstion:300 + size:'M' ---> [glove_42B_300d_g2w]")
+        print("3. modeltype:'glove' + corpus:'wiki' + dimenstion:300 + size:'none' ---> [glove_6B_300d_g2w]")
+        print("4. modeltype:'glove' + corpus:'wiki' + dimenstion:200 + size:'none' ---> [glove_6B_200d_g2w]")
+        print("5. modeltype:'glove' + corpus:'wiki' + dimenstion:100 + size:'none' ---> [glove_6B_100d_g2w]")
+        print("6. modeltype:'glove' + corpus:'wiki' + dimenstion:50 + size:'none' ---> [glove_6B_50d_g2w]")
+        print("7. modeltype:'glove' + corpus:'twitter' + dimenstion:200 + size:'none' ---> [glove_twitter_27B_200d_g2w]")
+        print("8. modeltype:'glove' + corpus:'twitter' + dimenstion:100 + size:'none' ---> [glove_twitter_27B_100d_g2w]")
+        print("9. modeltype:'glove' + corpus:'twitter' + dimenstion:50 + size:'none' ---> [glove_twitter_27B_50d_g2w]")
+        print("10. modeltype:'glove' + corpus:'twitter' + dimenstion:25 + size:'none' ---> [glove_twitter_27B_25d_g2w]")
+        print('------------------------------------')
         dimension = 300
         size = 'L'
-        model = get_glove_model(glove_840B_300d_g2w)
-        print('------------------------------------')
-        print('---> Warning: there is no corpus ' + corpus + ', turn to the default option.')
-        print('---> Incorrect corpus! Default corpus is [common], if you want to try other option, please input the right corpus:{"common","wiki","twitter"}')
         corpus = 'common'
-    print('------------------------------------')
-    print('Parameters :')
-    print('---> corpus = ' + corpus + '\n---> dimension = ' + str(dimension) + '\n---> size = ' + size )
-    print('------------------------------------\n')
+        model = get_glove_model('models/glove/glove.840B.300d.g2w.txt')
     return model,size,dimension
+    
 
-
-def get_bert_model_by_diff_para(layer = 12, dimension = 768, case = 'uncase', corpustype = 'none'):
-    if case == 'uncase':
-        if layer == 2:
-            corpustype = 'none'
-            if dimension == 128:
-                model = get_bert_model(bert_L_2_H_128d_uncase)
-            elif dimension == 256:
-                model = get_bert_model(bert_L_2_H_256d_uncase)
-            elif dimension == 512:
-                model = get_bert_model(bert_L_2_H_512d_uncase)
-            elif dimension == 768:
-                model = get_bert_model(bert_L_2_H_768d_uncase)
-            else :
-                model = get_bert_model(bert_L_2_H_768d_uncase)
-                print('------------------------------------')
-                print('---> Warning: there is no dimension ' + str(dimension) + ', turn to the default option.')
-                print('---> Default dimension is 768, if you want to try other option, please input any one in {128,256,512,768}')
-                dimension = 768
-        elif layer == 4:
-            corpustype = 'none'
-            if dimension == 128:
-                model = get_bert_model(bert_L_4_H_128d_uncase)
-            elif dimension == 256:
-                model = get_bert_model(bert_L_4_H_256d_uncase)
-            elif dimension == 512:
-                model = get_bert_model(bert_L_4_H_512d_uncase)
-            elif dimension == 768:
-                model = get_bert_model(bert_L_4_H_768d_uncase)
-            else :
-                model = get_bert_model(bert_L_4_H_768d_uncase)
-                print('------------------------------------')
-                print('---> Warning: there is no dimension ' + str(dimension) + ', turn to the default option.')
-                print('---> Default dimension is 768, if you want to try other option, please input any one in {128,256,512,768}')
-                dimension = 768
-        elif layer == 6:
-            corpustype = 'none'
-            if dimension == 128:
-                model = get_bert_model(bert_L_6_H_128d_uncase)
-            elif dimension == 256:
-                model = get_bert_model(bert_L_6_H_256d_uncase)
-            elif dimension == 512:
-                model = get_bert_model(bert_L_6_H_512d_uncase)
-            elif dimension == 768:
-                model = get_bert_model(bert_L_6_H_768d_uncase)   
-            else :
-                model = get_bert_model(bert_L_6_H_768d_uncase)
-                print('------------------------------------')
-                print('---> Warning: there is no dimension ' + str(dimension) + ', turn to the default option.')
-                print('---> Default dimension is 768, if you want to try other option, please input any one in {128,256,512,768}')
-                dimension = 768
-        elif layer == 8:
-            corpustype = 'none'
-            if dimension == 128:
-                model = get_bert_model(bert_L_8_H_128d_uncase)
-            elif dimension == 256:
-                model = get_bert_model(bert_L_8_H_256d_uncase)
-            elif dimension == 512:
-                model = get_bert_model(bert_L_8_H_512d_uncase)
-            elif dimension == 768:
-                model = get_bert_model(bert_L_8_H_768d_uncase)  
-            else :
-                model = get_bert_model(bert_L_8_H_768d_uncase)
-                print('------------------------------------')
-                print('---> Warning: there is no dimension ' + str(dimension) + ', turn to the default option.')
-                print('---> Default dimension is 768, if you want to try other option, please input any one in {128,256,512,768}')
-                dimension = 768
-        elif layer == 10:
-            corpustype = 'none'
-            if dimension == 128:
-                model = get_bert_model(bert_L_10_H_128d_uncase)
-            elif dimension == 256:
-                model = get_bert_model(bert_L_10_H_256d_uncase)
-            elif dimension == 512:
-                model = get_bert_model(bert_L_10_H_512d_uncase)
-            elif dimension == 768:
-                model = get_bert_model(bert_L_10_H_768d_uncase)   
-            else :
-                model = get_bert_model(bert_L_10_H_768d_uncase)
-                print('------------------------------------')
-                print('---> Warning: there is no dimension ' + str(dimension) + ', turn to the default option.')
-                print('---> Default dimension is 768, if you want to try other option, please input any one in {128,256,512,768}')
-                dimension = 768
-        elif layer == 12:
-            corpustype = 'none'
-            if dimension == 128:
-                model = get_bert_model(bert_L_12_H_128d_uncase)
-            elif dimension == 256:
-                model = get_bert_model(bert_L_12_H_256d_uncase)
-            elif dimension == 512:
-                model = get_bert_model(bert_L_12_H_512d_uncase)
-            elif dimension == 768:
-                model = get_bert_model(bert_L_12_H_768d_uncase)   
-            else :
-                model = get_bert_model(bert_L_12_H_768d_uncase)
-                print('------------------------------------')
-                print('---> Warning: there is no dimension ' + str(dimension) + ', turn to the default option.')
-                print('---> Default dimension is 768, if you want to try other option, please input any one in {128,256,512,768}')
-                dimension = 768
-        elif layer == 24:
-            dimension = 1024
-            if corpustype == 'none':
-                model = get_bert_model(bert_L_24_H_1024d_uncase) 
-            elif corpustype == 'wwm':
-                model = get_bert_model(bert_L_24_H_1024d_uncase_wwm)
-            else :
-                model = get_bert_model(bert_L_24_H_1024d_uncase)
-                print('------------------------------------')
-                print('---> Warning: there is no corpustype ' + corpustype + ', turn to the default option.')
-                print('---> Default corpustype is [none], if you want to try other option, please input any one in {"none","wwm"}')
-                corpustype = 'none'
+def get_bert_model_by_diff_para(layer = 12, dimension = 768, case = 'uncase', corpustype = 'none',language = 'en'):
+    path = 'models/bert/'
+    
+    if language == 'en':
+    
+        if dimension == 128 :
+            heads = 2
+        elif dimension == 256 : 
+            heads = 4
+        elif dimension == 512:
+            heads = 8
+        elif dimension == 768:
+            heads = 12
         else :
-            print('------------------------------------')
-            print('---> Warning: there is no layer ' + str(layer) + ', turn to the default option.')
-            print('---> Default layer is 12, dimension is 768, if you want to try other option, please input any layer in {2,4,6,8,10,12,24}, dimension in {128,256,512,768,1024}')
-            layer = 12
-            model,layer,dimension,case,corpustype = get_bert_model_by_diff_para(layer = layer, dimension = dimension, case = case, corpustype = corpustype)
-    elif case == 'case':
-        if layer == 12:
+            print("default dimension is 768")
             dimension = 768
-            corpustype = 'none'
-            model = get_bert_model(bert_L_12_H_768d_case) 
-        elif layer == 24:
-            dimension = 1024
-            if corpustype == 'none':
-                model = get_bert_model(bert_L_24_H_1024d_case) 
-            elif corpustype == 'wwm':
-                model = get_bert_model(bert_L_24_H_1024d_case_wwm)
-            else :
-                model = get_bert_model(bert_L_24_H_1024d_case) 
-                print('------------------------------------')
-                print('---> Warning: there is no corpustype ' + corpustype + ', turn to the default option.')
-                print('---> Default corpustype is [none], if you want to try other option, please input any corpustype in {"none","wwm"}')
-                corpustype = 'none'
-        else :
+            heads = 12
+        
+        name = 'bert_' + case + 'd_L-' + str(layer) + '_H-' + str(dimension) + '_A-' + str(heads)
+        online_name = 'google/bert_' + name
+        local_path = path + name
+    elif language == 'cn':
+        dimension = 768
+        case = ''
+        name = 'bert-base-chinese'
+        online_name = 'bert-base-chinese'
+        local_path = path + name
+        
+    
+    try:
+        tokenizer,model = get_bert_model(online_name)
+    except:
+        print('\n------------------------------------')
+        print("can't visit models online.")
+        print('------------------------------------\n')
+        try : 
             print('------------------------------------')
-            print('---> Warning: there is no layer ' + str(layer) + ', turn to the default option.')
-            print('---> Default layer is 12, dimension is 768, if you want to try other option, please input any layer in {12,24}')  
-            layer == 12
-            model,layer,dimension,case,corpustype = get_bert_model_by_diff_para(layer = layer, dimension = dimension, case = case, corpustype = corpustype)
-    else :
-        print('------------------------------------')
-        print('---> Warning: there is no case ' + case + ', turn to the default option.')
-        print('---> Default case is [uncase], if you want to try other option, please input any casetype in {"case","uncase"}')
-        case = 'uncase'
-        model,layer,dimension,case,corpustype = get_bert_model_by_diff_para(layer = layer, dimension = dimension, case = case, corpustype = corpustype)
+            print("> load the model from local path.")
+            tokenizer,model = get_bert_model(local_path)
+            print("< -- load local model success! -- >")
+        except :
+            print("We don't provide this model in local, please download the model from https://huggingface.co/")
+            print("The models we provide in local as follows:")
+            print("1. modeltype:'bert' + layer:12 + dimenstion:768 + case:'uncase' + corpustype:'none' + language:'en' ---> models/bert/bert_uncased_L-12_H-768_A-12")
+            print("2. modeltype:'bert' + layer:12 + dimenstion:768 + case:'' + corpustype:'' + language:'cn' ---> models/bert/bert-base-chinese")
+            print('------------------------------------')
+            print("You can download models from https://huggingface.co/ that have parameter as follows:")
+            print("1. modeltype:'bert' + layer:2 + dimenstion:128 + case:'uncase' + corpustype:'none' ---> [bert_L_2_H_128d_uncase]")
+            print("2. modeltype:'bert' + layer:2 + dimenstion:256 + case:'uncase' + corpustype:'none' ---> [bert_L_2_H_256d_uncase]")
+            print("3. modeltype:'bert' + layer:2 + dimenstion:512 + case:'uncase' + corpustype:'none' ---> [bert_L_2_H_512d_uncase]")
+            print("4. modeltype:'bert' + layer:2 + dimenstion:768 + case:'uncase' + corpustype:'none' ---> [bert_L_2_H_768d_uncase]")
+            print("5. modeltype:'bert' + layer:4 + dimenstion:128 + case:'uncase' + corpustype:'none' ---> [bert_L_4_H_128d_uncase]")
+            print("6. modeltype:'bert' + layer:4 + dimenstion:256 + case:'uncase' + corpustype:'none' ---> [bert_L_4_H_256d_uncase]")
+            print("7. modeltype:'bert' + layer:4 + dimenstion:512 + case:'uncase' + corpustype:'none' ---> [bert_L_4_H_512d_uncase]")
+            print("8. modeltype:'bert' + layer:4 + dimenstion:768 + case:'uncase' + corpustype:'none' ---> [bert_L_4_H_768d_uncase]")
+            print("9. modeltype:'bert' + layer:6 + dimenstion:128 + case:'uncase' + corpustype:'none' ---> [bert_L_6_H_128d_uncase]")
+            print("10. modeltype:'bert' + layer:6 + dimenstion:256 + case:'uncase' + corpustype:'none' ---> [bert_L_6_H_256d_uncase]")
+            print("11. modeltype:'bert' + layer:6 + dimenstion:512 + case:'uncase' + corpustype:'none' ---> [bert_L_6_H_512d_uncase]")
+            print("12. modeltype:'bert' + layer:6 + dimenstion:768 + case:'uncase' + corpustype:'none' ---> [bert_L_6_H_768d_uncase]")
+            print("13. modeltype:'bert' + layer:8 + dimenstion:128 + case:'uncase' + corpustype:'none' ---> [bert_L_8_H_128d_uncase]")
+            print("14. modeltype:'bert' + layer:8 + dimenstion:256 + case:'uncase' + corpustype:'none' ---> [bert_L_8_H_256d_uncase]")
+            print("15. modeltype:'bert' + layer:8 + dimenstion:512 + case:'uncase' + corpustype:'none' ---> [bert_L_8_H_512d_uncase]")
+            print("16. modeltype:'bert' + layer:8 + dimenstion:768 + case:'uncase' + corpustype:'none' ---> [bert_L_8_H_768d_uncase]")
+            print("17. modeltype:'bert' + layer:10 + dimenstion:128 + case:'uncase' + corpustype:'none' ---> [bert_L_10_H_128d_uncase]")
+            print("18. modeltype:'bert' + layer:10 + dimenstion:256 + case:'uncase' + corpustype:'none' ---> [bert_L_10_H_256d_uncase]")
+            print("19. modeltype:'bert' + layer:10 + dimenstion:512 + case:'uncase' + corpustype:'none' ---> [bert_L_10_H_512d_uncase]")
+            print("20. modeltype:'bert' + layer:10 + dimenstion:768 + case:'uncase' + corpustype:'none' ---> [bert_L_10_H_768d_uncase]")
+            print("21. modeltype:'bert' + layer:12 + dimenstion:128 + case:'uncase' + corpustype:'none' ---> [bert_L_12_H_128d_uncase]")
+            print("22. modeltype:'bert' + layer:12 + dimenstion:256 + case:'uncase' + corpustype:'none' ---> [bert_L_12_H_256d_uncase]")
+            print("23. modeltype:'bert' + layer:12 + dimenstion:512 + case:'uncase' + corpustype:'none' ---> [bert_L_12_H_512d_uncase]")
+            print("24. modeltype:'bert' + layer:12 + dimenstion:768 + case:'uncase' + corpustype:'none' ---> [bert_L_12_H_768d_uncase]")
+
+    
     print('------------------------------------')
     print('Parameters :')
     print('---> layer = ' + str(layer) + '\n---> dimension = ' + str(dimension) + '\n---> case = ' + case + '\n---> corpustype = ' + corpustype)
     print('------------------------------------\n')
-    return model,layer,dimension,case,corpustype
+    return tokenizer,model,layer,dimension,case,corpustype
 
+   
 
 def get_word_vector_from_model(wordlist,model,dimension=300):
     """ 
@@ -365,7 +304,7 @@ def Clean_text(sentencelist, ifstpw=0):
     return wordlist
 
             
-def Text_vector(file, modeltype = 'glove', corpus = 'common', layer = 12, dimension = 300, size = 'L', case = 'uncase', corpustype = 'none', filetype = 'csv', outword = 'n',ifstpw=0):            
+def Text_vector(file, modeltype = 'glove', corpus = 'common', layer = 12, dimension = 300, size = 'L', case = 'uncase', corpustype = 'none', filetype = 'csv', outword = 'n',ifstpw=0,language = 'en'):            
     """
     	get vector of each row of text, if the word is not in this model, output nan 
      
@@ -403,73 +342,27 @@ def Text_vector(file, modeltype = 'glove', corpus = 'common', layer = 12, dimens
     Returns
     ----------
         output a file include Text(optional) and vectors
-    
-    Entire model selection
-    ----------
-    <bert model>
-    'uncase'
-    1. modeltype:'bert' + layer:2 + dimenstion:128 + case:'uncase' + corpustype:'none' ---> [bert_L_2_H_128d_uncase] 
-    2. modeltype:'bert' + layer:2 + dimenstion:256 + case:'uncase' + corpustype:'none' ---> [bert_L_2_H_256d_uncase] 
-    3. modeltype:'bert' + layer:2 + dimenstion:512 + case:'uncase' + corpustype:'none' ---> [bert_L_2_H_512d_uncase] 
-    4. modeltype:'bert' + layer:2 + dimenstion:768 + case:'uncase' + corpustype:'none' ---> [bert_L_2_H_768d_uncase] 
-    5. modeltype:'bert' + layer:4 + dimenstion:128 + case:'uncase' + corpustype:'none' ---> [bert_L_4_H_128d_uncase] 
-    6. modeltype:'bert' + layer:4 + dimenstion:256 + case:'uncase' + corpustype:'none' ---> [bert_L_4_H_256d_uncase] 
-    7. modeltype:'bert' + layer:4 + dimenstion:512 + case:'uncase' + corpustype:'none' ---> [bert_L_4_H_512d_uncase] 
-    8. modeltype:'bert' + layer:4 + dimenstion:768 + case:'uncase' + corpustype:'none' ---> [bert_L_4_H_768d_uncase] 
-    9. modeltype:'bert' + layer:6 + dimenstion:128 + case:'uncase' + corpustype:'none' ---> [bert_L_6_H_128d_uncase] 
-    10. modeltype:'bert' + layer:6 + dimenstion:256 + case:'uncase' + corpustype:'none' ---> [bert_L_6_H_256d_uncase] 
-    11. modeltype:'bert' + layer:6 + dimenstion:512 + case:'uncase' + corpustype:'none' ---> [bert_L_6_H_512d_uncase] 
-    12. modeltype:'bert' + layer:6 + dimenstion:768 + case:'uncase' + corpustype:'none' ---> [bert_L_6_H_768d_uncase] 
-    13. modeltype:'bert' + layer:8 + dimenstion:128 + case:'uncase' + corpustype:'none' ---> [bert_L_8_H_128d_uncase] 
-    14. modeltype:'bert' + layer:8 + dimenstion:256 + case:'uncase' + corpustype:'none' ---> [bert_L_8_H_256d_uncase] 
-    15. modeltype:'bert' + layer:8 + dimenstion:512 + case:'uncase' + corpustype:'none' ---> [bert_L_8_H_512d_uncase] 
-    16. modeltype:'bert' + layer:8 + dimenstion:768 + case:'uncase' + corpustype:'none' ---> [bert_L_8_H_768d_uncase] 
-    17. modeltype:'bert' + layer:10 + dimenstion:128 + case:'uncase' + corpustype:'none' ---> [bert_L_10_H_128d_uncase] 
-    18. modeltype:'bert' + layer:10 + dimenstion:256 + case:'uncase' + corpustype:'none' ---> [bert_L_10_H_256d_uncase] 
-    19. modeltype:'bert' + layer:10 + dimenstion:512 + case:'uncase' + corpustype:'none' ---> [bert_L_10_H_512d_uncase] 
-    20. modeltype:'bert' + layer:10 + dimenstion:768 + case:'uncase' + corpustype:'none' ---> [bert_L_10_H_768d_uncase] 
-    21. modeltype:'bert' + layer:12 + dimenstion:128 + case:'uncase' + corpustype:'none' ---> [bert_L_12_H_128d_uncase] 
-    22. modeltype:'bert' + layer:12 + dimenstion:256 + case:'uncase' + corpustype:'none' ---> [bert_L_12_H_256d_uncase] 
-    23. modeltype:'bert' + layer:12 + dimenstion:512 + case:'uncase' + corpustype:'none' ---> [bert_L_12_H_512d_uncase] 
-    24. modeltype:'bert' + layer:12 + dimenstion:768 + case:'uncase' + corpustype:'none' ---> [bert_L_12_H_768d_uncase] 
-    25. modeltype:'bert' + layer:24 + dimenstion:1024 + case:'uncase' + corpustype:'none' ---> [bert_L_24_H_1024d_uncase] 
-    26. modeltype:'bert' + layer:24 + dimenstion:1024 + case:'uncase' + corpustype:'wwm' ---> [bert_L_24_H_1024d_uncase_wwm] 
-    
-    'case'
-    27. modeltype:'bert' + layer:12 + dimenstion:768 + case:'case' + corpustype:'none' ---> [bert_L_12_H_768d_case] 
-    28. modeltype:'bert' + layer:24 + dimenstion:1024 + case:'case' + corpustype:'none' ---> [bert_L_24_H_1024d_case] 
-    29. modeltype:'bert' + layer:24 + dimenstion:1024 + case:'case' + corpustype:'wwm' ---> [bert_L_24_H_1024d_case_wwm] 
-    
-   <glove model>
-   1. modeltype:'glove' + corpus:'common' + dimenstion:300 + size:'L' ---> [glove_840B_300d_g2w] [default]
-   2. modeltype:'glove' + corpus:'common' + dimenstion:300 + size:'M' ---> [glove_42B_300d_g2w]
-   3. modeltype:'glove' + corpus:'wiki' + dimenstion:300 + size:'none' ---> [glove_6B_300d_g2w]
-   4. modeltype:'glove' + corpus:'wiki' + dimenstion:200 + size:'none' ---> [glove_6B_200d_g2w]
-   5. modeltype:'glove' + corpus:'wiki' + dimenstion:100 + size:'none' ---> [glove_6B_100d_g2w]
-   6. modeltype:'glove' + corpus:'wiki' + dimenstion:50 + size:'none' ---> [glove_6B_50d_g2w]
-   7. modeltype:'glove' + corpus:'twitter' + dimenstion:200 + size:'none' ---> [glove_twitter_27B_200d_g2w]
-   8. modeltype:'glove' + corpus:'twitter' + dimenstion:100 + size:'none' ---> [glove_twitter_27B_100d_g2w]
-   9. modeltype:'glove' + corpus:'twitter' + dimenstion:50 + size:'none' ---> [glove_twitter_27B_50d_g2w]
-   10. modeltype:'glove' + corpus:'twitter' + dimenstion:25 + size:'none' ---> [glove_twitter_27B_25d_g2w]
-   
-   <word2vec model>
-   11. modeltype:'word2vec'+ corpus:'GoogleNews'+ dimenstion:300 + size:'none' ---> [word2vec_GoogleNews] 
-    
+        
     """
     sentencelist = readfiles(file)
     sentencevectorlist = []
+    
     # select different model
     if modeltype == 'bert':
-        model,layer,dimension,case,corpustype = get_bert_model_by_diff_para(layer=layer,dimension=dimension,case=case,corpustype=corpustype) 
+        model,tokenizer,layer,dimension,case,corpustype = get_bert_model_by_diff_para(layer=layer,dimension=dimension,case=case,corpustype=corpustype,language=language) 
         print('< -- get model success! -- >')
         # get sentence vector
-        sentencevectorarr = model.encode(sentencelist)
-        sentencevectorlist = sentencevectorarr.tolist()
+        outputslist = []
+        for s in sentencelist:
+            input_ids = tokenizer.encode(s,add_special_tokens=True,return_tensors='pt')
+            outputs = model(input_ids).last_hidden_state[:,-2,:].detach().numpy()
+            outputslist.append(outputs)
         # model name
-        modelname = modeltype + '_L' + str(layer) + '_' + str(dimension) + '_' + case + '_' + corpustype
+        sentencevectorlist = [arr.flatten() for arr in outputslist]
+        modelname = modeltype + '_L' + str(layer) + '_' + str(dimension) + '_' + case + '_' + corpustype + '_' + language
     
     elif modeltype == 'gpt2':
-        model,tokenizer = get_gpt2_model(gpt2_path)
+        model,tokenizer = get_gpt2_model()
         print('< -- get model success! -- >')
         # divide text
         chunk_size = 1000
@@ -482,10 +375,20 @@ def Text_vector(file, modeltype = 'glove', corpus = 'common', layer = 12, dimens
                 output = model(sentence_ids)
                 all_outputs.append(output)
         # merge outputs
+        outputslist = []
         for out in all_outputs:
-            sentencevectorlist.extend(out.last_hidden_state.numpy().squeeze())
+            outputslist.extend(out.last_hidden_state.numpy().squeeze())
+        sentencevectorlist = [arr.flatten() for arr in outputslist]
         modelname = modeltype
     
+    elif modeltype == 'clip':
+        model,_,tokenizer = get_clip_model()
+        
+        inputs = tokenizer(sentencelist, padding=True, return_tensors="pt")
+        sentencevectorlist = model.get_text_features(**inputs).detach().numpy()
+        dimension = 512
+        modelname = modeltype + '_' + str(dimension)
+        
     elif modeltype == 'glove' or modeltype == 'word2vec':
         if modeltype == 'glove':
             model,size,dimension = get_glove_model_by_diff_para(corpus = corpus, dimension = dimension, size = size)
@@ -516,6 +419,37 @@ def Text_vector(file, modeltype = 'glove', corpus = 'common', layer = 12, dimens
     outpath = 'results/Vector_' + modelname + '.' + filetype
     savefiles(sentencelist,sentencevectorlist,outpath,filetype,outword)
     print('< -- results has output -- >')
+    print(outpath)
+
     
-    # kill current bert-service
-    # print('< -- bert service close -- >')
+def Image_vector(imagefile, filetype = 'csv', outword = 'n'):   
+    """
+    	get vector of each row of image
+        
+    Parameters
+    ----------
+    imagefile : file
+        image path
+    filetype : str, optional
+        you can select outfile format {'txt','csv','xlsx'}, default format is csv
+    outword : str, optional
+        you can select if output words and vectors into one file {'n','y'}    
+    
+    Returns
+    ----------
+        output a file include Text(optional) and vectors
+    """ 
+
+    imagelist = readfiles(imagefile)
+    image = [Image.open(f) for f in imagelist]
+    
+    model,processor,_ = get_clip_model()
+    inputs = processor(images=image, return_tensors="pt", padding=True)
+    image_features = model.get_image_features(**inputs).detach().numpy()
+
+    if not os.path.exists('results'):
+        os.makedirs('results')
+    outpath = 'results/Vector_clip_512.' + filetype
+    
+    savefiles(imagelist,image_features,outpath,filetype,outword)
+    print('< -- results has output -- >')
