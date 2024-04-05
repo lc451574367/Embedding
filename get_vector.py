@@ -34,7 +34,6 @@ import gensim
 import numpy as np
 import os, signal
 from model_path import *
-from bert_serving.client import BertClient
 import subprocess
 from textprocess import *
 import nltk
