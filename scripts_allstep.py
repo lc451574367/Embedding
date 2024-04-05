@@ -11,18 +11,20 @@ from gensim.scripts.glove2word2vec import glove2word2vec
 
 "1. Download pre-trained models"
 """
-Glove:https://nlp.stanford.edu/projects/glove/
-word2vec:https://code.google.com/archive/p/word2vec/
-bert:https://github.com/google-research/bert
+Glove: https://nlp.stanford.edu/projects/glove/glove.xx.xx.txt
+e.g. https://nlp.stanford.edu/projects/glove/glove.42B.300d.txt
 
-This tool provide some bert models download from official website:
-    uncased_L-2_H-128_A-2
-    uncased_L-4_H-128_A-2
-    uncased_L-6_H-128_A-2
-    uncased_L-8_H-128_A-2
-    uncased_L-10_H-128_A-2
+word2vec: https://code.google.com/archive/p/word2vec/
 
-The other models are not provided due to the upload size limitation, if you want to try more different parameters, please download other models from the official website above.
+bert: https://huggingface.co/google/bert_xx_L-xx_H-xx_A-xx
+e.g. https://huggingface.co/google/bert_uncased_L-12_H-768_A-12
+
+gpt2: https://huggingface.co/gpt2
+
+clip: https://huggingface.co/openai/clip-vit-base-patchxx
+e.g. https://huggingface.co/openai/clip-vit-base-patch32
+
+Please download models from the official website above, if you want to try more parameters of some models, you must download the model that corresponds to them 
 """
 
 "2. Transfer format"
