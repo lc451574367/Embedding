@@ -3,6 +3,9 @@
 This repository includes a set of python scripts for getting embedding vectors of word and sentence by word2vec, glove and bert. The target audience is NLP and calculation of semantic distance between words, word pairs, and texts.
 
 ## Dependencies
+```
+python version : 3.10
+```
 
 To run the python scripts : 
 ```
