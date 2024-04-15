@@ -6,7 +6,7 @@ This repository includes a set of python scripts for getting embedding vectors o
 
 To run the python scripts : 
 ```
-pip install -i https://pypi.tuna.tsinghua.edu.cn/simple gensim numpy scipy pandas transformers torch openpyxl nltk Pillow allennlp string re torchvision tabulate
+pip install -i https://pypi.tuna.tsinghua.edu.cn/simple gensim numpy scipy pandas transformers torch openpyxl nltk Pillow allennlp re torchvision tabulate
 ```
 
 ## Installation
