@@ -9,7 +9,7 @@ python version : 3.10
 
 To run the python scripts : 
 ```
-pip install -i https://pypi.tuna.tsinghua.edu.cn/simple gensim numpy scipy pandas transformers torch openpyxl nltk Pillow allennlp re torchvision tabulate
+pip install -i https://pypi.tuna.tsinghua.edu.cn/simple gensim numpy scipy==1.10 pandas transformers torch openpyxl nltk Pillow allennlp torchvision tabulate
 ```
 
 ## Installation
